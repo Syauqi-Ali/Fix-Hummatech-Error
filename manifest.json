@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Hummatech 500 Error Fix",
+  "version": "2024.9.26",
+  "description": "Hummatech 500 Error Fix.",
+  "author": "SyauqiAli",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting",
+    "proxy",
+    "storage",
+    "webRequest"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "48": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://pkl.hummatech.com/*"
+      ],
+      "js": [
+        "index.js"
+      ]
+    }
+  ]
+}
