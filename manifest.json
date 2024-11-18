@@ -29,6 +29,18 @@
       ],
       "js": [
         "index.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://pkl.hummatech.com/siswa-offline"
+      ],
+      "js": [
+        "events/dashboard.js"
+      ],
+      "css": [
+        "styles/dashboard.css"
       ]
     }
   ]

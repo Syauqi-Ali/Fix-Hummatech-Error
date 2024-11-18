@@ -1,56 +1,115 @@
-const url = 'https://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@raw.githubusercontent.com/Syauqi-Ali/Fix-Hummatech-Error';
-let lastModified = null;
+// index.js
+document.addEventListener("DOMContentLoaded", async () => {
+    'use strict';
 
-// Atur interval pembaruan dalam satuan jam
-const updateInterval = 24; // Misalnya setiap 24 jam
-const updateIntervalMs = updateInterval * 60 * 60 * 1000;
+    const { pathname, origin } = location;
 
-async function checkForUpdates() {
-    try {
-        const response = await fetch(url, {
-            method: 'HEAD'
+    // Constants
+    const API = {
+        LOGIN: `${origin}/login`,
+        STORAGE_KEY: 'account'
+    };
+
+    // Handle server error case
+    if (document.title === 'Server Error') {
+        await handleServerError();
+    }
+
+    // Handle login page
+    if (pathname === "/login") {
+        setupLoginHandler();
+    }
+
+    // Main error handler
+    async function handleServerError() {
+        try {
+            const token = await fetchCSRFToken();
+            if (!token) throw new Error('CSRF token not found');
+
+            const account = await getAccount();
+            if (!account) throw new Error('No stored credentials');
+
+            await attemptLogin(token, account);
+        } catch (error) {
+            console.error("Error handling server error:", error);
+            location.href = API.LOGIN;
+        }
+    }
+
+    // Fetch CSRF token
+    async function fetchCSRFToken() {
+        const response = await fetch(API.LOGIN);
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.querySelector('input[type="hidden"][name="_token"]')?.value;
+    }
+
+    // Attempt login
+    async function attemptLogin(token, account) {
+        const response = await fetch(API.LOGIN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token
+            },
+            body: new URLSearchParams({
+                _token: token,
+                ...account
+            })
         });
 
         if (response.ok) {
-            const newModified = response.headers.get('Last-Modified');
+            location.reload();
+        } else {
+            throw new Error(`Login failed: ${response.statusText}`);
+        }
+    }
 
-            if (lastModified !== newModified) {
-                console.log('Update detected. Fetching and executing new script...');
-                lastModified = newModified;
-                await fetchAndExecuteScript();
-            } else {
-                console.log('No updates found.');
+    // Setup login form handler
+    function setupLoginHandler() {
+        const loginButton = document.querySelector('#formAuthentication button');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        loginButton?.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const email = emailInput?.value;
+            const password = passwordInput?.value;
+
+            if (email && password) {
+                await setAccount(email, password);
             }
-        } else {
-            console.error('Failed to check for updates:', response.status);
-        }
-    } catch (error) {
-        console.error('Error checking for updates:', error);
+        });
     }
-}
 
-async function fetchAndExecuteScript() {
-    try {
-        const response = await fetch(url);
-        if (response.ok) {
-            const scriptContent = await response.text();
-
-            // Buat elemen <script> baru untuk mengeksekusi kode
-            const script = document.createElement('script');
-            script.textContent = scriptContent;
-            document.body.appendChild(script);
-
-            console.log('Script executed successfully.');
-        } else {
-            console.error('Failed to fetch script:', response.status);
-        }
-    } catch (error) {
-        console.error('Error fetching script:', error);
+    // Storage helpers with better error handling
+    async function getAccount() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get([API.STORAGE_KEY], ({ account, error }) => {
+                if (error || !account) {
+                    console.warn('Failed to get account:', error);
+                    resolve(null);
+                    return;
+                }
+                resolve(account);
+            });
+        });
     }
-}
 
-// Periksa pembaruan sesuai interval yang diatur
-setInterval(checkForUpdates, updateIntervalMs);
-
-// Jalankan pertama kali saat inisialisasi
-checkForUpdates();
+    async function setAccount(email, password) {
+        return new Promise((resolve) => {
+            const account = { email, password };
+            chrome.storage.local.set({ [API.STORAGE_KEY]: account }, () => {
+                const error = chrome.runtime.lastError;
+                if (error) {
+                    console.warn('Failed to save account:', error);
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            });
+        });
+    }
+});

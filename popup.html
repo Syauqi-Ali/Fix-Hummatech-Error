@@ -5,9 +5,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-modal-js@2.0.1/demoFiles/bootstrap.min.css">
 </head>
 
 <body>
+
+    <div class="modal fade modal-bookmark" id="detail">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content px-2">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title me-2" id="exampleModalLabel">Detail Jurnal</h5>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="detail-content">
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-end">
+                        <button class="purchase-btn btn btn-hover-effect btn-light-danger text-danger f-w-500"
+                            type="button" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#detail">
+        Launch demo modal
+    </button>
+
+    <script>
+        document.addEventListener("click", function (event) {
+            const { body } = document;
+
+            if (event.target.matches("[data-bs-toggle=modal]")) {
+                const targetModal = event.target.getAttribute("data-bs-target");
+                openModal(targetModal);
+            }
+
+            if (event.target.matches("[data-bs-dismiss=modal]")) {
+                const modal = event.target.closest(".modal");
+                closeModal(modal);
+            }
+        });
+
+        function openModal(targetModal) {
+            const { body } = document;
+            const modal = document.querySelector(targetModal);
+
+            modal.classList.add("show");
+            modal.style.display = "block";
+            body.classList.add("modal-open");
+            body.style.overflow = "hidden";
+
+            const backdrop = document.createElement("div");
+            backdrop.classList = "modal-backdrop fade show";
+            body.append(backdrop);
+
+            backdrop.addEventListener("click", () => closeModal(modal));
+        }
+
+        function closeModal(modal) {
+            const { body } = document;
+
+            modal.classList.remove("show");
+            modal.style.display = "none";
+
+            body.classList.remove("modal-open");
+            body.style = "";
+
+            const backdrop = document.querySelector(".modal-backdrop.fade.show");
+            if (backdrop) backdrop.remove();
+        }
+
+    </script>
 
 </body>
 
